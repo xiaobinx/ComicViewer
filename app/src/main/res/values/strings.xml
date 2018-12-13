@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ComicViewer</string>
+    <string name="str_main_title_comic">漫画全本</string>
+    <string name="str_main_title_doujin">同人志</string>
+    <string name="str_main_title_cg">随机写真</string>
+    <string name="str_main_title_history">历史记录</string>
+    <string name="imgLoading">image loading</string>
+</resources>
