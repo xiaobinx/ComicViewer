@@ -18,8 +18,8 @@ import okhttp3.Response
 import java.util.concurrent.TimeUnit
 
 private val t_client = OkHttpClient.Builder()
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
+    .readTimeout(30, TimeUnit.SECONDS)
+    .build()
 
 /**
  * http工具，下载文件时缓存目录使用httpCacheDir
@@ -66,14 +66,14 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
         val request = prepareCommonRequest()
         val call = client.newCall(request)
         call.enqueue(
-                SimpleCallback(
-                        onSuccess,
-                        onError ?: {
-                            Log.e(tag, "请求发生错误: ${it.e?.message}，url->${it.call!!.request().url()}", it.e)
-                            "end"
-                        },
-                        doFinally ?: { }
-                )
+            SimpleCallback(
+                onSuccess,
+                onError ?: {
+                    Log.e(tag, "请求发生错误: ${it.e?.message}，url->${it.call!!.request().url()}", it.e)
+                    "end"
+                },
+                doFinally ?: { }
+            )
         )
         return call
     }
@@ -115,6 +115,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
 
     /**
      * 异步下载文件并同时使用内存及硬盘两种缓存，分别使用imgListDowloadExecutor, imgLoadExecutor下载和加载的图片，用于下载长列表中的图片，异步的返回bitmap
+     * 这个方法会尝试避免重复下载，后添加的重复下载任务会被直接放弃，回调函数不会被执行
      * 执行这个方法 onSuccess onError doFinally都不会生效
      * onSuccess onError doFinally
      *
@@ -125,13 +126,16 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
      * @param success 请求成功时的回调函数，失败的时候不会抛出异常，也不会执行success方法，只会在控制台中打印错误的日志
      * @return 返回正在执行或将要执行任务的Future
      */
-    fun asyListImgLoad(pixelW: Int = 0,
-                       pixelH: Int = 0,
-                       useMeCache: Boolean = true,
-                       useDiskCache: Boolean = true,
-                       success: (Bitmap) -> Unit): DownloadTask? {
+    fun asyLoadImgWithCache(
+        pixelW: Int = 0,
+        pixelH: Int = 0,
+        useMeCache: Boolean = true,
+        useDiskCache: Boolean = true,
+        success: (Bitmap) -> Unit
+    ): DownloadTask? {
+        val urlMd5 = url.md5().toHexString() // 用作硬盘缓存 和 内存缓存的key
         // 1.内存缓存中取
-        val bmkey = "$pixelW-$pixelW-$url"
+        val bmkey = "$pixelW-$pixelW-$urlMd5" // 内存缓存 把缩放参数加上
         if (useMeCache) {
             val bm = bimapCache.get(bmkey)
             if (null != bm) {
@@ -145,9 +149,8 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
         }
 
         // 2.硬盘缓存中取
-        val dcKey = url.md5().toHexString()
         if (useDiskCache) {
-            DiskCache.get(dcKey)?.let {
+            DiskCache.get(urlMd5)?.let {
                 commonExecutor.submit {
                     try {
                         val b = decodeStream(it.inputStream.readBytesThenClose(), pixelW, pixelH)
@@ -167,7 +170,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
                 val bytes = get()?.body()?.byteStream()?.let {
                     val bytes = it.readBytesThenClose()
                     if (bytes.size < 0) throw Exception("获取请求体发生错误")
-                    if (useDiskCache) DiskCache.put(dcKey, bytes)
+                    if (useDiskCache) DiskCache.put(urlMd5, bytes)
                     bytes
                 } // end byteStream let
                 if (null == bytes) {

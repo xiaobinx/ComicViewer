@@ -10,14 +10,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
+import com.bq.comicviewer.R
+import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
+import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
 import com.bq.mmcg.domain.Comic
 import com.bq.mmcg.domain.ComicPage
 import com.bq.mmcg.parser.ComicParser
 import com.bq.mmcg.parser.DoujinParser
 import com.bq.mmcg.parser.IComicPageParser
-import com.bq.comicviewer.R
-import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
-import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
 import kotlinx.android.synthetic.main.rlist_item_comic.view.*
 import java.util.*
@@ -79,9 +79,9 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
         sr.apply {
             setColorSchemeResources(
-                    android.R.color.holo_green_light,
-                    android.R.color.holo_orange_light,
-                    android.R.color.holo_red_light
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light
             )
             setOnRefreshListener {
                 loadNextHeadp()
@@ -145,8 +145,8 @@ class ComicListActivity : DownloadTaskManagerActivity() {
     }
 }
 
-class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activity: DownloadTaskManagerActivity)
-    : RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
+class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activity: DownloadTaskManagerActivity) :
+    RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
 
     override fun onClick(v: View) {
         val comic = v.iv.tag as Comic
@@ -171,7 +171,7 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
         val comic = comics[position]
         holder.tv.text = comic.title
         iv.tag = comic
-        val task = HttpExecutor(comic.coverUrl).asyListImgLoad(90, 120) {
+        val task = HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
             activity.runOnUiThread {
                 if (iv.tag === comic) {
                     iv.setImageBitmap(it)

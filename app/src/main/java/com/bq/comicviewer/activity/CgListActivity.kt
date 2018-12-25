@@ -94,7 +94,7 @@ private class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.
         val comic = comics[position]
         holder.tv.text = comic.title
         iv.tag = comic
-        HttpExecutor(comic.coverUrl).asyListImgLoad(90, 120) {
+        HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
             activity.runOnUiThread {
                 if (iv.tag === comic) {
                     iv.setImageBitmap(it)

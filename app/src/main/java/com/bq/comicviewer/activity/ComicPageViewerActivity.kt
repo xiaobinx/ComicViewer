@@ -7,13 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
+import android.widget.SeekBar
 import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.bq.androidx.http.HttpExecutor
-import com.bq.androidx.tool.commonExecutor
-import com.bq.mmcg.domain.Comic
-import com.bq.mmcg.parser.ComicParser
 import com.bq.comicviewer.R
 import com.bq.comicviewer.sqlhelper.ComicSqlHelper
+import com.bq.mmcg.domain.Comic
+import com.bq.mmcg.parser.ComicParser
 import kotlinx.android.synthetic.main.activity_comic_page_viewer.*
 import kotlinx.android.synthetic.main.vpitem_comic_page.view.*
 import java.util.*
@@ -43,7 +44,30 @@ class ComicPageViewerActivity : Activity() {
 
         comic = intent.extras["comic"] as Comic
         pvAdapter = ComicPageViewerAdapter(this)
-        vp.adapter = pvAdapter
+
+        vp.apply {
+            vp.adapter = pvAdapter
+
+            addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+                override fun onPageScrollStateChanged(state: Int) {
+                    if (ViewPager.SCROLL_STATE_IDLE == state && sb.progress != vp.currentItem) {
+                        updateImgProgress()
+                    }
+                }
+
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+                override fun onPageSelected(position: Int) {}
+            })
+        }
+        sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                seekBar.progress
+                if (fromUser && vp.currentItem != progress) vp.currentItem = progress
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
         loadData()
     }
 
@@ -63,37 +87,55 @@ class ComicPageViewerActivity : Activity() {
     }
 
     private fun initUi() {
+        imgs.addAll(comic.imgs)
+        sb.apply {
+            max = imgs.size - 1
+            progress = comic.i
+        }
         runOnUiThread {
-            imgs.addAll(comic.imgs)
             pvAdapter.notifyDataSetChanged()
             vp.setCurrentItem(comic.i, false)
         }
     }
 
+    fun updateImgProgress() {
+        sb.progress = vp.currentItem
+    }
+
     override fun finish() {
         try {
+            // 更新观看历史记录
+            comicSqlHelper.updateHistory(comic.id, vp.currentItem)
             comicSqlHelper.close()
         } finally {
             super.finish()
+        }
+    }
+
+    fun toggleToolBar() {
+        if (sb.visibility == View.GONE) {
+            sb.visibility = View.VISIBLE
+        } else {
+            sb.visibility = View.GONE
         }
     }
 }
 
 class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : PagerAdapter() {
 
-    // private val tag = javaClass.name
-
-    private val viewPage = activity.vp
-
-    private val comic = activity.comic
+    private val tag = javaClass.name
 
     private val imgs = activity.imgs
 
     private val holders = LinkedList<ViewHolder>()
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
+        // 从缓存中获取或创建一个holder
         val holder = if (0 == holders.size) {
-            ViewHolder(activity.layoutInflater.inflate(R.layout.vpitem_comic_page, container, false))
+            val newView = activity.layoutInflater.inflate(R.layout.vpitem_comic_page, container, false)
+            ViewHolder(newView).apply {
+                iv.setOnClickListener { activity.toggleToolBar() }
+            }
         } else {
             holders.removeFirst()
         }
@@ -101,29 +143,17 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         val imgUrl = imgs[position]
         iv.tag = imgUrl
         pb.visibility = View.VISIBLE
-        HttpExecutor(imgUrl).asyListImgLoad(useMeCache = false) {
-            activity.runOnUiThread {
-                if (iv.tag == imgUrl) {
-                    pb.visibility = View.GONE
-                    iv.setImageBitmap(it)
-                }
-            }
-        }
+        loadBm(imgUrl, iv, pb)
         container.addView(holder.view)
-
-        val currentItemIndex = viewPage.currentItem
-        if (currentItemIndex > 0 && currentItemIndex != comic.i) {
-            commonExecutor.execute {
-                activity.comicSqlHelper.updateHistory(comic.id, currentItemIndex)
-                comic.i = currentItemIndex
-            }
-        }
         return holder
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, o: Any) {
         val holder = o as ViewHolder
-        holder.iv.setImageBitmap(null)
+        holder.iv.apply {
+            setImageBitmap(null)
+            tag = null
+        }
         container.removeView(holder.view)
         holders.add(holder)
     }
@@ -136,9 +166,29 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         return imgs.size
     }
 
+    lateinit var currentHolder: ViewHolder // 先设置位延迟初始化 看看 有问题再说 表示当前显示 的holder
+    override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
+        currentHolder = `object` as ViewHolder
+    }
+
+    fun getPrimaryItem(): ViewHolder {
+        return currentHolder
+    }
+
+    fun loadBm(imgUrl: String, iv: ImageView, pb: View) {
+        HttpExecutor(imgUrl).asyLoadImgWithCache(useMeCache = false) {
+            activity.runOnUiThread {
+                if (iv.tag == imgUrl) {
+                    pb.visibility = View.GONE
+                    iv.setImageBitmap(it)
+                }
+            }
+        }
+    }
+
     @Suppress("PLUGIN_WARNING")
     class ViewHolder(val view: View) {
-        val iv = view.iv!!
+        val iv = view.iv!! as ImageView
         private val pb = view.pb!!
 
         operator fun component1(): View = view
