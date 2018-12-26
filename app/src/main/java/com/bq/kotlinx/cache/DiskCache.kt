@@ -1,38 +1,34 @@
-package me.xiaobinx.kotlinx.cache
+package com.bq.kotlinx.cache
 
 import com.bq.kotlinx.copyToThenClose
-import com.bq.comicviewer.App
 import com.jakewharton.disklrucache.DiskLruCache
 import java.io.ByteArrayInputStream
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
 
+class DiskCache(
+    private val cacheDir: String,
+    private val appVersion: Int,
+    private val diskCacheMaxSize: Long
+) {
 
-private const val appVersion = 1
-
-val diskLruCacheDir: File
-    get() {
-        val path = App.diskLruCacheDir
-        val dir = File(path)
+    init {
+        val dir = File(cacheDir)
         if (!dir.exists()) {
             dir.mkdirs()
         }
-        println(path)
-        return dir
     }
-
-object DiskCache {
 
     private val cache by lazy {
         DiskLruCache.open(
-                diskLruCacheDir,
-                appVersion, 1,
-                App.diskCacheMaxSize
+            File(cacheDir),
+            appVersion, 1,
+            diskCacheMaxSize
         )
     }
 
-    fun contains(key:String):Boolean {
+    fun contains(key: String): Boolean {
         return cache.contains(key)
     }
 

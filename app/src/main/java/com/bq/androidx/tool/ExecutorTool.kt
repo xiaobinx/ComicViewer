@@ -15,7 +15,7 @@ val commonExecutor by lazy {
             TimeUnit.SECONDS,
             LinkedBlockingQueue(),
             ThreadFactory {
-                Thread(it, "imgListDowloadExecutor-thread").apply { this.isDaemon = false }
+                Thread(it, "commonExecutor-thread").apply { this.isDaemon = false }
             }
     )
 }

@@ -7,10 +7,10 @@ import com.bq.androidx.tool.ImgListDowloadExecutor
 import com.bq.androidx.tool.bimapCache
 import com.bq.androidx.tool.bitmap.decodeStream
 import com.bq.androidx.tool.commonExecutor
+import com.bq.comicviewer.App.Companion.diskCache
 import com.bq.kotlinx.md5
 import com.bq.kotlinx.readBytesThenClose
 import com.bq.kotlinx.toHexString
-import me.xiaobinx.kotlinx.cache.DiskCache
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -150,7 +150,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
 
         // 2.硬盘缓存中取
         if (useDiskCache) {
-            DiskCache.get(urlMd5)?.let {
+            diskCache.get(urlMd5)?.let {
                 commonExecutor.submit {
                     try {
                         val b = decodeStream(it.inputStream.readBytesThenClose(), pixelW, pixelH)
@@ -170,7 +170,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
                 val bytes = get()?.body()?.byteStream()?.let {
                     val bytes = it.readBytesThenClose()
                     if (bytes.size < 0) throw Exception("获取请求体发生错误")
-                    if (useDiskCache) DiskCache.put(urlMd5, bytes)
+                    if (useDiskCache) diskCache.put(urlMd5, bytes)
                     bytes
                 } // end byteStream let
                 if (null == bytes) {
