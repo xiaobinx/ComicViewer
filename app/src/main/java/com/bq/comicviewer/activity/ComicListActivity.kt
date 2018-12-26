@@ -63,7 +63,6 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 var lastVisibleItem: Int = 0
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    Log.d(this@ComicListActivity.tag, "newState: $newState")
                     if (newState == RecyclerView.SCROLL_STATE_IDLE && lastVisibleItem + 1 == comicePageAdaprt.itemCount) {
                         loadNextTailp()
                     }
@@ -178,8 +177,7 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
                 }
             } // end activity.runOnUiThread
         }// end  HttpExecutor.asyListImgLoad
-        println("生成任务$task")
-        if (null != task) activity.downloadTasks.add(task)
+        if (null != task) activity.addDownloadTask(task)
     } // end fun onBindViewHolder
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {

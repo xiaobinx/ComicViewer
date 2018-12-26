@@ -12,13 +12,34 @@ open class DownloadTaskManagerActivity : Activity() {
     /**
      * 只在主线程中操作downloadTasks 避免线程安全问题
      */
-    var downloadTasks = LinkedList<DownloadTask>()
+    private var downloadTasks = LinkedList<DownloadTask>()
+
+    private var clearTime = System.currentTimeMillis()
+
+    fun addDownloadTask(task: DownloadTask) {
+        downloadTasks.add(task)
+        clear()
+    }
+
+    fun clear() {
+        val now = System.currentTimeMillis()
+        if (now - clearTime < 500) return
+        val iterator = downloadTasks.iterator()
+        while (iterator.hasNext()) {
+            val task = iterator.next()
+            if (task.isDone()) {
+                iterator.remove()
+            }
+        }
+        clearTime = now
+    }
 
     /**
      * 重新执行被取消的任务
      */
     override fun onResume() {
         super.onResume()
+        if (downloadTasks.size < 1) return
         val newList = LinkedList<DownloadTask>()
         val it = downloadTasks.iterator()
         while (it.hasNext()) {

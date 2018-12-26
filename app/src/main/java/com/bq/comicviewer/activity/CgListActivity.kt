@@ -101,7 +101,7 @@ private class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.
                 }
             }
         }?.let {
-            activity.downloadTasks.add(it)
+            activity.addDownloadTask(it)
         }
     }
 

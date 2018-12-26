@@ -1,6 +1,6 @@
 package com.bq.comicviewer.activity
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
+import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
 import com.bq.comicviewer.R
 import com.bq.comicviewer.sqlhelper.ComicSqlHelper
@@ -19,10 +20,7 @@ import kotlinx.android.synthetic.main.activity_comic_page_viewer.*
 import kotlinx.android.synthetic.main.vpitem_comic_page.view.*
 import java.util.*
 
-/**
- * Created by xiaob on 2018/3/14.
- */
-class ComicPageViewerActivity : Activity() {
+class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     private val tag = javaClass.toString()
 
@@ -50,8 +48,9 @@ class ComicPageViewerActivity : Activity() {
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageScrollStateChanged(state: Int) {
-                    if (ViewPager.SCROLL_STATE_IDLE == state && sb.progress != vp.currentItem) {
+                    if (sb.progress != vp.currentItem) {
                         updateImgProgress()
+                        setText()
                     }
                 }
 
@@ -61,14 +60,21 @@ class ComicPageViewerActivity : Activity() {
         }
         sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                seekBar.progress
-                if (fromUser && vp.currentItem != progress) vp.currentItem = progress
+                if (fromUser && vp.currentItem != progress) {
+                    vp.currentItem = progress
+                    setText()
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
         loadData()
+    }
+
+    @SuppressLint("SetTextI18n")
+    fun setText() {
+        tv.text = "${vp.currentItem + 1}/${comic.imgs.size}"
     }
 
     private fun loadData() {
@@ -95,6 +101,7 @@ class ComicPageViewerActivity : Activity() {
         runOnUiThread {
             pvAdapter.notifyDataSetChanged()
             vp.setCurrentItem(comic.i, false)
+            setText()
         }
     }
 
@@ -113,14 +120,18 @@ class ComicPageViewerActivity : Activity() {
     }
 
     fun toggleToolBar() {
-        if (sb.visibility == View.GONE) {
-            sb.visibility = View.VISIBLE
+        val l = ll_tool_bar
+        if (l.visibility == View.GONE) {
+            l.visibility = View.VISIBLE
         } else {
-            sb.visibility = View.GONE
+            l.visibility = View.GONE
         }
     }
 }
 
+/**
+ * veiwpager的适配器
+ */
 class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : PagerAdapter() {
 
     private val tag = javaClass.name
@@ -176,7 +187,7 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
     }
 
     fun loadBm(imgUrl: String, iv: ImageView, pb: View) {
-        HttpExecutor(imgUrl).asyLoadImgWithCache(useMeCache = false) {
+        val task = HttpExecutor(imgUrl).asyLoadImgWithCache(useMeCache = false) {
             activity.runOnUiThread {
                 if (iv.tag == imgUrl) {
                     pb.visibility = View.GONE
@@ -184,6 +195,7 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
                 }
             }
         }
+        if (task != null) activity.addDownloadTask(task)
     }
 
     @Suppress("PLUGIN_WARNING")
