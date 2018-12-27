@@ -3,6 +3,7 @@ package com.bq.comicviewer.adaprt
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import androidx.viewpager.widget.PagerAdapter
 import com.bq.androidx.http.HttpExecutor
 import com.bq.comicviewer.R
@@ -15,7 +16,7 @@ import java.util.*
  */
 class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : PagerAdapter() {
 
-    private val tag = javaClass.name
+    // private val tag = javaClass.name
 
     private val imgs = activity.imgs
 
@@ -26,23 +27,23 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         val holder = if (0 == holders.size) {
             val newView = activity.layoutInflater.inflate(R.layout.vpitem_comic_page, container, false)
             ViewHolder(newView).apply {
-                iv.setOnClickListener { activity.toggleToolBar() }
+                imageView.setOnClickListener { activity.toggleToolBar() }
             }
         } else {
             holders.removeFirst()
         }
-        val (_, iv, pb) = holder
+        val (_, iv, progressBar) = holder
         val imgUrl = imgs[position]
         iv.tag = imgUrl
-        pb.visibility = View.VISIBLE
-        loadBm(imgUrl, iv, pb)
+        progressBar.visibility = View.VISIBLE
+        loadBm(imgUrl, iv, progressBar)
         container.addView(holder.view)
         return holder
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, o: Any) {
         val holder = o as ViewHolder
-        holder.iv.apply {
+        holder.imageView.apply {
             setImageBitmap(null)
             tag = null
         }
@@ -58,20 +59,20 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         return imgs.size
     }
 
-    lateinit var currentHolder: ViewHolder // 先设置位延迟初始化 看看 有问题再说 表示当前显示 的holder
-    override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
-        currentHolder = `object` as ViewHolder
-    }
+//    private lateinit var currentHolder: ViewHolder // 先设置位延迟初始化 看看 有问题再说 表示当前显示 的holder
+//    override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
+//        currentHolder = `object` as ViewHolder
+//    }
+//
+//    fun getPrimaryItem(): ViewHolder {
+//        return currentHolder
+//    }
 
-    fun getPrimaryItem(): ViewHolder {
-        return currentHolder
-    }
-
-    fun loadBm(imgUrl: String, iv: ImageView, pb: View) {
+    private fun loadBm(imgUrl: String, iv: ImageView, progressBar: ProgressBar) {
         val task = HttpExecutor(imgUrl).asyLoadImgWithCache(useMeCache = false) {
             activity.runOnUiThread {
                 if (iv.tag == imgUrl) {
-                    pb.visibility = View.GONE
+                    progressBar.visibility = View.GONE
                     iv.setImageBitmap(it)
                 }
             }
@@ -79,14 +80,13 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         if (task != null) activity.addDownloadTask(task)
     }
 
-    @Suppress("PLUGIN_WARNING")
     class ViewHolder(val view: View) {
-        val iv = view.iv!! as ImageView
-        private val pb = view.pb!!
+        val imageView = view.photoView!! as ImageView
+        private val progressBar = view.progressBar!!
 
         operator fun component1(): View = view
-        operator fun component2(): ImageView = iv
-        operator fun component3(): View = pb
+        operator fun component2(): ImageView = imageView
+        operator fun component3(): ProgressBar = progressBar
     }
 
 }

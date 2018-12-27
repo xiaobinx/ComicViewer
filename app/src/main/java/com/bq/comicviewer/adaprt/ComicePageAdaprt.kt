@@ -16,7 +16,7 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
     RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
 
     override fun onClick(v: View) {
-        val comic = v.iv.tag as Comic
+        val comic = v.imageView.tag as Comic
         val intent = Intent(activity, ComicPageViewerActivity::class.java)
         intent.putExtra("comic", comic)
         activity.startActivity(intent)
@@ -33,10 +33,10 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
     }
 
     override fun onBindViewHolder(holder: RvHolder, position: Int) {
-        val iv = holder.iv
+        val iv = holder.imageView
         iv.setImageBitmap(null)
         val comic = comics[position]
-        holder.tv.text = comic.title
+        holder.textView.text = comic.title
         iv.tag = comic
         val task = HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
             activity.runOnUiThread {
@@ -49,7 +49,7 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
     } // end fun onBindViewHolder
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val iv = view.iv!!
-        val tv = view.tv!!
+        val imageView = view.imageView!!
+        val textView = view.textView!!
     }
 }

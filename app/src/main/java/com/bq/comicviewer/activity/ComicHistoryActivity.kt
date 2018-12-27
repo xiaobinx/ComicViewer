@@ -30,7 +30,7 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_item_rlist_comic)
         title = "浏览历史"
-        rv_page.apply {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(this@ComicHistoryActivity)
             adapter = comicePageAdaprt
             itemAnimator = DefaultItemAnimator()
@@ -52,7 +52,7 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
             })
         }
 
-        sr.apply {
+        swipeRefreshLayout.apply {
             setColorSchemeResources(
                     android.R.color.holo_green_light,
                     android.R.color.holo_orange_light,
@@ -99,13 +99,13 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
 
     private fun loadPage(p: Int, action: (ArrayList<Comic>) -> Unit) {
         if (pageItem.onLoading) return
-        sr.isRefreshing = true
+        swipeRefreshLayout.isRefreshing = true
         pageItem.onLoading = true
         commonExecutor.execute {
             action(comicSqlHelper.queryHistory(p, pageItem))
             runOnUiThread {
                 comicePageAdaprt.notifyDataSetChanged()
-                sr.isRefreshing = false
+                swipeRefreshLayout.isRefreshing = false
                 pageItem.onLoading = false
             }
         }

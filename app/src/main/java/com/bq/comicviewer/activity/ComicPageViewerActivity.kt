@@ -40,12 +40,12 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
         comic = intent.extras["comic"] as Comic
         pvAdapter = ComicPageViewerAdapter(this)
 
-        vp.apply {
-            vp.adapter = pvAdapter
+        viewPager.apply {
+            adapter = pvAdapter
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageScrollStateChanged(state: Int) {
-                    if (sb.progress != vp.currentItem) {
+                    if (sb.progress != currentItem) {
                         updateImgProgress()
                         setText()
                     }
@@ -57,8 +57,8 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
         }
         sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                if (fromUser && vp.currentItem != progress) {
-                    vp.currentItem = progress
+                if (fromUser && viewPager.currentItem != progress) {
+                    viewPager.currentItem = progress
                     setText()
                 }
             }
@@ -71,7 +71,7 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     @SuppressLint("SetTextI18n")
     fun setText() {
-        tv.text = "${vp.currentItem + 1}/${comic.imgs.size}"
+        textViewLabel.text = "${viewPager.currentItem + 1}/${comic.imgs.size}"
     }
 
     private fun loadData() {
@@ -97,19 +97,19 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
         }
         runOnUiThread {
             pvAdapter.notifyDataSetChanged()
-            vp.setCurrentItem(comic.i, false)
+            viewPager.setCurrentItem(comic.i, false)
             setText()
         }
     }
 
     fun updateImgProgress() {
-        sb.progress = vp.currentItem
+        sb.progress = viewPager.currentItem
     }
 
     override fun finish() {
         try {
             // 更新观看历史记录
-            comicSqlHelper.updateHistory(comic.id, vp.currentItem)
+            comicSqlHelper.updateHistory(comic.id, viewPager.currentItem)
             comicSqlHelper.close()
         } finally {
             super.finish()
@@ -117,6 +117,6 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
     }
 
     fun toggleToolBar() {
-        ll_tool_bar.toggleVisibility()
+        llToolBar.toggleVisibility()
     }
 }

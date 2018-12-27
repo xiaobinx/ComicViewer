@@ -15,14 +15,14 @@
 
 
         <ImageView
-        android:id="@+id/iv"
+        android:id="@+id/imageView"
         android:layout_width="90dp"
         android:layout_height="120dp"
         android:contentDescription="@string/imgLoading"
         android:padding="3dp" />
 
         <TextView
-            android:id="@+id/tv"
+            android:id="@+id/textView"
             android:layout_width="0dp"
             android:layout_height="120dp"
             android:layout_weight="1" />

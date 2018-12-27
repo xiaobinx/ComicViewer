@@ -33,13 +33,13 @@ class CgListActivity : DownloadTaskManagerActivity() {
 
         title = getString(R.string.str_main_title_cg)
 
-        rv_page.apply {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(this@CgListActivity)
             adapter = comicePageAdaprt
             itemAnimator = DefaultItemAnimator()
         }
 
-        sr.setOnRefreshListener {
+        swipeRefreshLayout.setOnRefreshListener {
             loadPage()
         }
 
@@ -47,7 +47,7 @@ class CgListActivity : DownloadTaskManagerActivity() {
     }
 
     private fun loadPage() {
-        sr.isRefreshing = true
+        swipeRefreshLayout.isRefreshing = true
         HttpExecutor(URL_CG_LIST).asyGetText {
             val list = cgParser.parseCgList(it)
             Log.d(tag, "共有列表项：${list.size}")
@@ -56,7 +56,7 @@ class CgListActivity : DownloadTaskManagerActivity() {
                 addAll(list)
             }
             runOnUiThread {
-                sr.isRefreshing = false
+                swipeRefreshLayout.isRefreshing = false
                 comicePageAdaprt.notifyDataSetChanged()
             }
         }

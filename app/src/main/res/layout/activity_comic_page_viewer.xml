@@ -4,10 +4,10 @@
              android:layout_height="match_parent">
 
     <com.bq.androidx.components.FixedViewPager
-            android:id="@+id/vp"
+            android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-    <LinearLayout android:id="@+id/ll_tool_bar"
+    <LinearLayout android:id="@+id/llToolBar"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
@@ -25,7 +25,7 @@
                  android:max="1"
                  android:progress="1"
                  style="?android:attr/progressBarStyleHorizontal"/>
-        <TextView android:id="@+id/tv"
+        <TextView android:id="@+id/textViewLabel"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:layout_gravity="center"/>

@@ -20,7 +20,7 @@ class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.Adapter<
     private val comics = activity.comics
 
     override fun onClick(v: View) {
-        val comic = v.iv.tag as Comic
+        val comic = v.imageView.tag as Comic
         val intent = Intent(activity, ComicPageViewerActivity::class.java)
         intent.putExtra("comic", comic)
         activity.startActivity(intent)
@@ -54,7 +54,7 @@ class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.Adapter<
     }
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val iv = view.iv!!
-        val tv = view.tv!!
+        val iv = view.imageView!!
+        val tv = view.textView!!
     }
 }

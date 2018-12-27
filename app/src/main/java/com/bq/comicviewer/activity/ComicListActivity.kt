@@ -53,7 +53,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
         title = getString(strId)
 
-        rv_page.apply {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(this@ComicListActivity)
             adapter = comicePageAdaprt
             itemAnimator = DefaultItemAnimator()
@@ -74,7 +74,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             })
         }
 
-        sr.apply {
+        swipeRefreshLayout.apply {
             setColorSchemeResources(
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
@@ -121,12 +121,12 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     private fun loadPage(p: Int, action: (ComicPage) -> Unit) {
         if (pageItem.onLoading) return
-        sr.isRefreshing = true
+        swipeRefreshLayout.isRefreshing = true
         pageItem.onLoading = true
         val pageUrl = partternUrl.replace("@{page}", p.toString())
         HttpExecutor(pageUrl).doFinally {
             runOnUiThread {
-                sr.isRefreshing = false
+                swipeRefreshLayout.isRefreshing = false
                 pageItem.onLoading = false
             }
         }.asyGetText {
