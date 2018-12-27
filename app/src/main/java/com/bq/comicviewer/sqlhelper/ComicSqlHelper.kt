@@ -57,7 +57,7 @@ class ComicSqlHelper(context: Context) : SQLiteOpenHelper(context, "comic", null
     /**
      * <插入> 一个comic，并 <插入> 或 <更新> 历史纪录
      */
-    fun saveComic(comic: Comic, i: Int = 0) {
+    fun saveComic(comic: Comic) {
         writableDatabase.transaction {
             var id = rawQuery("SELECT _id FROM comic WHERE url = ?", arrayOf(comic.url)).use {
                 if (it.moveToFirst()) it.getLong(0) else -1
@@ -73,7 +73,6 @@ class ComicSqlHelper(context: Context) : SQLiteOpenHelper(context, "comic", null
                     execSQL("INSERT INTO comic_imgs(cid, i, img_url) VALUES(?, ?, ?)", arrayOf(id, i, url))
                 }
             } // end if id < 0
-            // updateHistory(this, id, i)
             comic.id = id
         } // end transaction
     }

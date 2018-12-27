@@ -1,13 +1,13 @@
 package com.bq.androidx.components.activityx
 
 import android.annotation.SuppressLint
-import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import com.bq.androidx.tool.DownloadTask
 import com.bq.androidx.tool.ImgListDowloadExecutor
 import java.util.*
 
 @SuppressLint("Registered")
-open class DownloadTaskManagerActivity : Activity() {
+open class DownloadTaskManagerActivity : AppCompatActivity() {
 
     /**
      * 只在主线程中操作downloadTasks 避免线程安全问题
@@ -21,7 +21,7 @@ open class DownloadTaskManagerActivity : Activity() {
         clear()
     }
 
-    fun clear() {
+    private fun clear() {
         val now = System.currentTimeMillis()
         if (now - clearTime < 500) return
         val iterator = downloadTasks.iterator()

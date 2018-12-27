@@ -8,7 +8,7 @@ fun InputStream.copyToThenClose(out: OutputStream, bufferSize: Int = DEFAULT_BUF
         out.use {
             var bytesCopied: Long = 0
             val b = ByteArray(bufferSize)
-            var len = -1
+            var len: Int
             while (true) {
                 len = read(b)
                 if (len < 0) break
@@ -20,7 +20,7 @@ fun InputStream.copyToThenClose(out: OutputStream, bufferSize: Int = DEFAULT_BUF
     }
 }
 
-// @Suppress("NOTHING_TO_INLINE")
+@Suppress("NOTHING_TO_INLINE")
 inline fun InputStream.readBytesThenClose(): ByteArray {
     this.use {
         return readBytes()

@@ -1,12 +1,14 @@
 package com.bq.comicviewer.activity
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.bq.comicviewer.R
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : Activity() {
+class MainActivity : AppCompatActivity() {
+
+    private val tag = javaClass.name
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,7 @@ class MainActivity : Activity() {
             val intent = Intent(this, ComicHistoryActivity::class.java)
             startActivity(intent)
         }
+
     }
 
     private fun openPage(strId: Int) {
