@@ -35,14 +35,4 @@ class MainActivity : Activity() {
         startActivity(intent)
     }
 
-//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-//        if (0 == requestCode
-//                && permissions.size > 0
-//                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//            Toast.makeText(this, "成功获取WRITE_EXTERNAL_STORAGE权限", Toast.LENGTH_LONG).show()
-//        } else {
-//            Toast.makeText(this, "获取WRITE_EXTERNAL_STORAGE权限失败", Toast.LENGTH_LONG).show()
-//        }
-//    }
-
 }

@@ -1,10 +1,7 @@
 package com.bq.comicviewer.activity
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,13 +10,14 @@ import com.bq.androidx.http.HttpExecutor
 import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
 import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
+import com.bq.comicviewer.adaprt.ComicePageAdaprt
+import com.bq.comicviewer.domain.PageItem
 import com.bq.mmcg.domain.Comic
 import com.bq.mmcg.domain.ComicPage
 import com.bq.mmcg.parser.ComicParser
 import com.bq.mmcg.parser.DoujinParser
 import com.bq.mmcg.parser.IComicPageParser
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
-import kotlinx.android.synthetic.main.rlist_item_comic.view.*
 import java.util.*
 
 /**
@@ -141,90 +139,5 @@ class ComicListActivity : DownloadTaskManagerActivity() {
                 comicePageAdaprt.notifyDataSetChanged()
             }
         }
-    }
-}
-
-class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activity: DownloadTaskManagerActivity) :
-    RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
-
-    override fun onClick(v: View) {
-        val comic = v.iv.tag as Comic
-        val intent = Intent(activity, ComicPageViewerActivity::class.java)
-        intent.putExtra("comic", comic)
-        activity.startActivity(intent)
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RvHolder {
-        val view = activity.layoutInflater.inflate(R.layout.rlist_item_comic, parent, false)
-        view.setOnClickListener(this)
-        return RvHolder(view)
-    }
-
-    override fun getItemCount(): Int {
-        return comics.size
-    }
-
-    override fun onBindViewHolder(holder: RvHolder, position: Int) {
-        val iv = holder.iv
-        iv.setImageBitmap(null)
-        val comic = comics[position]
-        holder.tv.text = comic.title
-        iv.tag = comic
-        val task = HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
-            activity.runOnUiThread {
-                if (iv.tag === comic) {
-                    iv.setImageBitmap(it)
-                }
-            } // end activity.runOnUiThread
-        }// end  HttpExecutor.asyListImgLoad
-        if (null != task) activity.addDownloadTask(task)
-    } // end fun onBindViewHolder
-
-    class RvHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val iv = view.iv!!
-        val tv = view.tv!!
-    }
-}
-
-class PageItem {
-    var rowOfPage: Int = 10
-
-    var onLoading: Boolean = false
-
-    var headp: Int = 1
-
-    var tailp: Int = 1
-
-    var maxp: Int = -1
-
-    var rowCount: Int = -1
-        set(value) {
-            field = value
-            val tp: Float = field.toFloat() / rowOfPage
-            maxp = tp.toInt()
-            maxp = if (tp > maxp) maxp + 1 else maxp
-        }
-
-    fun hasPrePage(): Boolean {
-        return headp > 1
-    }
-
-    fun prePage(): Int {
-        return headp - 1
-    }
-
-    fun hasNextPage(): Boolean {
-        return tailp < maxp
-    }
-
-    fun nextPage(): Int {
-        return tailp + 1
-    }
-
-    @Synchronized
-    fun reset() {
-        headp = 1
-        tailp = 1
-        maxp = -1
     }
 }

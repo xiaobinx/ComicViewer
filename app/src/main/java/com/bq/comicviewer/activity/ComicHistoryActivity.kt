@@ -9,6 +9,8 @@ import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.tool.commonExecutor
 import com.bq.mmcg.domain.Comic
 import com.bq.comicviewer.R
+import com.bq.comicviewer.adaprt.ComicePageAdaprt
+import com.bq.comicviewer.domain.PageItem
 import com.bq.comicviewer.sqlhelper.ComicSqlHelper
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
 

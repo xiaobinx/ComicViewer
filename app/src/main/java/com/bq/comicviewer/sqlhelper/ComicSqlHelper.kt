@@ -9,7 +9,7 @@ import com.bq.androidx.eachRow
 import com.bq.androidx.println
 import com.bq.androidx.transaction
 import com.bq.mmcg.domain.Comic
-import com.bq.comicviewer.activity.PageItem
+import com.bq.comicviewer.domain.PageItem
 
 
 const val version = 1
