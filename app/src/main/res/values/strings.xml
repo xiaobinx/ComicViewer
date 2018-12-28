@@ -5,4 +5,6 @@
     <string name="str_main_title_cg">随机写真</string>
     <string name="str_main_title_history">历史记录</string>
     <string name="imgLoading">image loading</string>
+    <string name="refresh">刷新</string>
+    <string name="jump">跳页</string>
 </resources>

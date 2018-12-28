@@ -5,12 +5,11 @@ import android.os.Environment
 import android.util.Log
 
 // Activity.-------------------------------------------------------------------------------------
-@Suppress("DEPRECATION", "unused")
 val Activity.screenWidth
-    get() = this.windowManager.defaultDisplay.width
-@Suppress("DEPRECATION", "unused")
+    get() = resources.displayMetrics.widthPixels
+
 val Activity.screenHeight
-    get() = this.windowManager.defaultDisplay.height
+    get() = resources.displayMetrics.heightPixels
 
 @Suppress("unused")
 fun Activity.printAllDirIKnow() {

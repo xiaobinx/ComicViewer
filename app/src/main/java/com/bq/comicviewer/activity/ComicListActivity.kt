@@ -1,7 +1,11 @@
 package com.bq.comicviewer.activity
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -11,6 +15,7 @@ import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
 import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
 import com.bq.comicviewer.adaprt.ComicePageAdaprt
+import com.bq.comicviewer.components.PagePickerDialog
 import com.bq.comicviewer.domain.PageItem
 import com.bq.mmcg.domain.Comic
 import com.bq.mmcg.domain.ComicPage
@@ -21,8 +26,9 @@ import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
 import java.util.*
 
 /**
- * Created by xiaob on 2018/3/13.
+ * TODO: 初步完成翻页动作，但滚动依然有问题
  */
+@SuppressLint("InflateParams")
 class ComicListActivity : DownloadTaskManagerActivity() {
 
     private val tag = javaClass.name
@@ -36,6 +42,14 @@ class ComicListActivity : DownloadTaskManagerActivity() {
     private lateinit var comicPageParser: IComicPageParser
 
     private val pageItem = PageItem()
+
+    private val pagePickerDialog by lazy {
+        PagePickerDialog(this) { d, p ->
+            onJumpPageActionDone(d, p)
+        }.apply {
+            maxp = pageItem.maxp
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,6 +108,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             return
         }
 
+        swipeRefreshLayout.isRefreshing = true
         val p = pageItem.prePage()
         loadPage(p) {
             comics.addAll(0, it.comics)
@@ -112,16 +127,19 @@ class ComicListActivity : DownloadTaskManagerActivity() {
     }
 
     private fun refresh() {
-        pageItem.reset()
+        swipeRefreshLayout.isRefreshing = true
         loadPage(1) { comicPage ->
             comics.clear()
             comics.addAll(comicPage.comics)
+            pageItem.reset()
         }
     }
 
+    /**
+     * 加载指定页的项目，自定义如何添加到当前列表comics
+     */
     private fun loadPage(p: Int, action: (ComicPage) -> Unit) {
         if (pageItem.onLoading) return
-        swipeRefreshLayout.isRefreshing = true
         pageItem.onLoading = true
         val pageUrl = partternUrl.replace("@{page}", p.toString())
         HttpExecutor(pageUrl).doFinally {
@@ -133,11 +151,53 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             val comicPage = comicPageParser.parseComicPage(it)
             Log.d(tag, "共有列表项：${comicPage.comics.size}")
             action(comicPage)
-
             pageItem.maxp = comicPage.pageNum
             runOnUiThread {
                 comicePageAdaprt.notifyDataSetChanged()
             }
         }
+    }
+
+    private fun onJumpPageActionDone(pagePickerDialog: PagePickerDialog, p: Int): Boolean {
+        Log.d(tag, "jump: $p")
+        return when {
+            p < 1 -> {
+                pagePickerDialog.setEditText(1)
+                true
+            }
+            p > pageItem.maxp -> {
+                pagePickerDialog.setEditText(pageItem.maxp)
+                true
+            }
+            else -> {
+                swipeRefreshLayout.isRefreshing = true
+                loadPage(p) {
+                    comics.clear()
+                    comics.addAll(it.comics)
+                    pageItem.headp = p
+                    pageItem.tailp = p
+                }
+                false
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun onJumpPage() {
+        pagePickerDialog.show()
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        MenuInflater(this).inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.refreshPage -> refresh()
+            R.id.jumpPage -> onJumpPage()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
