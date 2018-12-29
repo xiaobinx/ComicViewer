@@ -2,71 +2,42 @@ package com.bq.androidx.components.activityx
 
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
-import com.bq.androidx.tool.DownloadTask
-import com.bq.androidx.tool.ImgListDowloadExecutor
+import com.bq.androidx.http.imglistloader.BitmapCacheLoader
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import java.util.*
 
 @SuppressLint("Registered")
-open class DownloadTaskManagerActivity : AppCompatActivity() {
+abstract class DownloadTaskManagerActivity : AppCompatActivity() {
+
+    abstract val imgBitmapListLoader: SimpleBitmapListLoader
 
     /**
      * 只在主线程中操作downloadTasks 避免线程安全问题
      */
-    private var downloadTasks = LinkedList<DownloadTask>()
-
-    private var clearTime = System.currentTimeMillis()
-
-    fun addDownloadTask(task: DownloadTask) {
-        downloadTasks.add(task)
-        clear()
-    }
-
-    private fun clear() {
-        val now = System.currentTimeMillis()
-        if (now - clearTime < 500) return
-        val iterator = downloadTasks.iterator()
-        while (iterator.hasNext()) {
-            val task = iterator.next()
-            if (task.isDone()) {
-                iterator.remove()
-            }
-        }
-        clearTime = now
-    }
+    private var canceledTasks = LinkedList<BitmapCacheLoader>()
 
     /**
      * 重新执行被取消的任务
      */
     override fun onResume() {
         super.onResume()
-        if (downloadTasks.size < 1) return
-        val newList = LinkedList<DownloadTask>()
-        val it = downloadTasks.iterator()
+        if (canceledTasks.size < 1) return
+        val it = canceledTasks.iterator()
         while (it.hasNext()) {
             val task = it.next()
-            if (task.isCancelled()) {
-                ImgListDowloadExecutor.submit(task.url, task.action)?.let {
-                    newList.add(it)
-                }
+            if (task.future?.isCancelled == true) {
+                task.load()
             }
         }
-        downloadTasks = newList
+        canceledTasks.clear()
     }
 
     /**
-     * 移除已经完成的任务
+     * 添加未下载完成的任务
      */
     override fun onPause() {
         try {
-            val it = downloadTasks.iterator()
-            while (it.hasNext()) {
-                val task = it.next()
-                if (task.isDone()) {
-                    it.remove()
-                } else {
-                    task.cancel(false)
-                }
-            }
+            imgBitmapListLoader.cancelTaskAndAddUndoneTo(canceledTasks)
         } finally {
             super.onPause()
         }
@@ -77,8 +48,7 @@ open class DownloadTaskManagerActivity : AppCompatActivity() {
      */
     override fun finish() {
         try {
-            downloadTasks.forEach { it.cancel(false) }
-            downloadTasks.clear()
+            canceledTasks.clear()
         } finally {
             super.finish()
         }

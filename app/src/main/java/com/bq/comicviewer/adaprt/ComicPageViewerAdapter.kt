@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.viewpager.widget.PagerAdapter
-import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.ComicPageViewerActivity
 import kotlinx.android.synthetic.main.vpitem_comic_page.view.*
@@ -14,7 +14,10 @@ import java.util.*
 /**
  * 仅在ComicPageViewerActivity中使用
  */
-class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : PagerAdapter() {
+class ComicPageViewerAdapter(
+    private val bitmapListLoader: SimpleBitmapListLoader,
+    private val activity: ComicPageViewerActivity
+) : PagerAdapter() {
 
     // private val tag = javaClass.name
 
@@ -59,17 +62,8 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
         return imgs.size
     }
 
-//    private lateinit var currentHolder: ViewHolder // 先设置位延迟初始化 看看 有问题再说 表示当前显示 的holder
-//    override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
-//        currentHolder = `object` as ViewHolder
-//    }
-//
-//    fun getPrimaryItem(): ViewHolder {
-//        return currentHolder
-//    }
-
     private fun loadBm(imgUrl: String, iv: ImageView, progressBar: ProgressBar) {
-        val task = HttpExecutor(imgUrl).asyLoadImgWithCache(useMeCache = false) {
+        bitmapListLoader.load(imgUrl) {
             activity.runOnUiThread {
                 if (iv.tag == imgUrl) {
                     progressBar.visibility = View.GONE
@@ -77,7 +71,6 @@ class ComicPageViewerAdapter(private val activity: ComicPageViewerActivity) : Pa
                 }
             }
         }
-        if (task != null) activity.addDownloadTask(task)
     }
 
     class ViewHolder(val view: View) {

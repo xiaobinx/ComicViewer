@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_CG_LIST
 import com.bq.comicviewer.adaprt.CgPageAdaprt
@@ -23,7 +24,9 @@ class CgListActivity : DownloadTaskManagerActivity() {
 
     val comics = ArrayList<Comic>(100)
 
-    private val comicePageAdaprt = CgPageAdaprt(this)
+    override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
+
+    private val comicePageAdaprt = CgPageAdaprt(imgBitmapListLoader,this)
 
     private var cgParser = CgParser()
 

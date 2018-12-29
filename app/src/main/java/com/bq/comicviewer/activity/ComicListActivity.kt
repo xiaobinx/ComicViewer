@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
 import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
@@ -32,7 +33,9 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     val comics = ArrayList<Comic>(100)
 
-    private val comicePageAdaprt = ComicePageAdaprt(comics, this)
+    override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
+
+    private val comicePageAdaprt = ComicePageAdaprt(comics, imgBitmapListLoader, this)
 
     private lateinit var partternUrl: String
 

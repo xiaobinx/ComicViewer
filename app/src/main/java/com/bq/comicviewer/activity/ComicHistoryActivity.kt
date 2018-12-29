@@ -6,12 +6,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.androidx.tool.commonExecutor
-import com.bq.mmcg.domain.Comic
 import com.bq.comicviewer.R
 import com.bq.comicviewer.adaprt.ComicePageAdaprt
 import com.bq.comicviewer.domain.PageItem
 import com.bq.comicviewer.sqlhelper.ComicSqlHelper
+import com.bq.mmcg.domain.Comic
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
 
 class ComicHistoryActivity : DownloadTaskManagerActivity() {
@@ -20,7 +21,9 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
 
     private val comics = ArrayList<Comic>()
 
-    private val comicePageAdaprt = ComicePageAdaprt(comics, this)
+    override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
+
+    private val comicePageAdaprt = ComicePageAdaprt(comics, imgBitmapListLoader, this)
 
     private val pageItem = PageItem()
 
@@ -54,9 +57,9 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
 
         swipeRefreshLayout.apply {
             setColorSchemeResources(
-                    android.R.color.holo_green_light,
-                    android.R.color.holo_orange_light,
-                    android.R.color.holo_red_light
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light
             )
             setOnRefreshListener {
                 loadNextHeadp()

@@ -1,18 +1,22 @@
 package com.bq.comicviewer.adaprt
 
+import android.app.Activity
 import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
-import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.ComicPageViewerActivity
 import com.bq.mmcg.domain.Comic
 import kotlinx.android.synthetic.main.rlist_item_comic.view.*
 import java.util.*
 
-class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activity: DownloadTaskManagerActivity) :
+class ComicePageAdaprt(
+    private val comics: ArrayList<Comic>,
+    val bitmapListLoader: SimpleBitmapListLoader,
+    private val activity: Activity
+) :
     RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
 
     override fun onClick(v: View) {
@@ -38,14 +42,13 @@ class ComicePageAdaprt(private val comics: ArrayList<Comic>, private val activit
         val comic = comics[position]
         holder.textView.text = comic.title
         iv.tag = comic
-        val task = HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
+        bitmapListLoader.load(comic.coverUrl) {
             activity.runOnUiThread {
                 if (iv.tag === comic) {
                     iv.setImageBitmap(it)
                 }
             } // end activity.runOnUiThread
-        }// end  HttpExecutor.asyListImgLoad
-        if (null != task) activity.addDownloadTask(task)
+        }// end addLoadTask
     } // end fun onBindViewHolder
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {

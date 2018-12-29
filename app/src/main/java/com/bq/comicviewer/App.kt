@@ -2,8 +2,8 @@ package com.bq.comicviewer
 
 import android.app.Application
 import android.preference.PreferenceManager
-import com.bq.androidx.tool.ImgListDowloadExecutor
 import com.bq.androidx.tool.commonExecutor
+import com.bq.androidx.tool.executorService
 import com.bq.kotlinx.cache.DiskCache
 
 
@@ -47,7 +47,7 @@ class App : Application() {
             try {
                 commonExecutor.shutdown()
             } finally {
-                ImgListDowloadExecutor.executorService.shutdown()
+                executorService.shutdown()
             }
         } finally {
             super.onTerminate()

@@ -8,6 +8,7 @@ import android.widget.SeekBar
 import androidx.viewpager.widget.ViewPager
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.androidx.toggleVisibility
 import com.bq.comicviewer.R
 import com.bq.comicviewer.adaprt.ComicPageViewerAdapter
@@ -29,6 +30,8 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     val comicSqlHelper by lazy { ComicSqlHelper(this) }
 
+    override val imgBitmapListLoader = SimpleBitmapListLoader(useMeCache = false)
+
     lateinit var pvAdapter: ComicPageViewerAdapter
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -38,7 +41,7 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
         setContentView(R.layout.activity_comic_page_viewer)
 
         comic = intent.extras["comic"] as Comic
-        pvAdapter = ComicPageViewerAdapter(this)
+        pvAdapter = ComicPageViewerAdapter(imgBitmapListLoader, this)
 
         viewPager.apply {
             adapter = pvAdapter

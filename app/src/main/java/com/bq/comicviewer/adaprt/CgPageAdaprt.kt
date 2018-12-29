@@ -4,7 +4,7 @@ import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.CgListActivity
 import com.bq.comicviewer.activity.ComicPageViewerActivity
@@ -14,7 +14,11 @@ import kotlinx.android.synthetic.main.rlist_item_comic.view.*
 /**
  * 仅在CgListActivity中使用
  */
-class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.Adapter<CgPageAdaprt.RvHolder>(),
+class CgPageAdaprt(
+    private val bitmapListLoader: SimpleBitmapListLoader,
+    private val activity: CgListActivity
+) :
+    RecyclerView.Adapter<CgPageAdaprt.RvHolder>(),
     View.OnClickListener {
 
     private val comics = activity.comics
@@ -42,15 +46,13 @@ class CgPageAdaprt(private val activity: CgListActivity) : RecyclerView.Adapter<
         val comic = comics[position]
         holder.tv.text = comic.title
         iv.tag = comic
-        HttpExecutor(comic.coverUrl).asyLoadImgWithCache(90, 120) {
+        bitmapListLoader.load(comic.coverUrl) {
             activity.runOnUiThread {
                 if (iv.tag === comic) {
                     iv.setImageBitmap(it)
                 }
             }
-        }?.let {
-            activity.addDownloadTask(it)
-        }
+        }// end bitmapListLoader.load
     }
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {
