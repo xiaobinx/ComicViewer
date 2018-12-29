@@ -10,6 +10,9 @@ import com.bq.comicviewer.R
 import kotlinx.android.synthetic.main.dialog_page_picker.*
 import kotlin.concurrent.thread
 
+/**
+ * @param action 在完成输入后按下回车。触发完成动作后触发，返回true表示继续输入 返回 false表示输入结束
+ */
 class PagePickerDialog(context: Context, val action: (PagePickerDialog, Int) -> Boolean) : Dialog(context) {
 
     var maxp: Int = -1

@@ -25,9 +25,6 @@ import com.bq.mmcg.parser.IComicPageParser
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
 import java.util.*
 
-/**
- * TODO: 初步完成翻页动作，但滚动依然有问题
- */
 @SuppressLint("InflateParams")
 class ComicListActivity : DownloadTaskManagerActivity() {
 
@@ -43,13 +40,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     private val pageItem = PageItem()
 
-    private val pagePickerDialog by lazy {
-        PagePickerDialog(this) { d, p ->
-            onJumpPageActionDone(d, p)
-        }.apply {
-            maxp = pageItem.maxp
-        }
-    }
+    private lateinit var pagePickerDialog: PagePickerDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,8 +76,8 @@ class ComicListActivity : DownloadTaskManagerActivity() {
                     //最后一个可见的ITEM
                     lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                 }
-            })
-        }
+            })// end addOnScrollListener
+        } // end recyclerView setting
 
         swipeRefreshLayout.apply {
             setColorSchemeResources(
@@ -97,11 +88,16 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             setOnRefreshListener {
                 loadNextHeadp()
             }
-        }
+        } // end swipeRefreshLayout setting
+
+        pagePickerDialog = PagePickerDialog(this) { d, p -> onJumpPageActionDone(d, p) }
 
         refresh()
     }
 
+    /**
+     * 加载头页上一页
+     */
     private fun loadNextHeadp() {
         if (!pageItem.hasPrePage()) {
             refresh()
@@ -113,9 +109,15 @@ class ComicListActivity : DownloadTaskManagerActivity() {
         loadPage(p) {
             comics.addAll(0, it.comics)
             pageItem.headp = p
+            runOnUiThread {
+                comicePageAdaprt.notifyItemRangeInserted(0, it.comics.size)
+            }
         }
     }
 
+    /**
+     * 加载尾页的下一页
+     */
     private fun loadNextTailp() {
         if (!pageItem.hasNextPage()) return
 
@@ -123,6 +125,9 @@ class ComicListActivity : DownloadTaskManagerActivity() {
         loadPage(p) {
             comics.addAll(it.comics)
             pageItem.tailp = p
+            runOnUiThread {
+                comicePageAdaprt.notifyItemRangeInserted(comics.size - 1, it.comics.size)
+            }
         }
     }
 
@@ -132,6 +137,10 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             comics.clear()
             comics.addAll(comicPage.comics)
             pageItem.reset()
+            runOnUiThread {
+                comicePageAdaprt.notifyDataSetChanged()
+                recyclerView.scrollToPosition(0)
+            }
         }
     }
 
@@ -144,7 +153,9 @@ class ComicListActivity : DownloadTaskManagerActivity() {
         val pageUrl = partternUrl.replace("@{page}", p.toString())
         HttpExecutor(pageUrl).doFinally {
             runOnUiThread {
-                swipeRefreshLayout.isRefreshing = false
+                if (swipeRefreshLayout.isRefreshing) {
+                    swipeRefreshLayout.isRefreshing = false
+                }
                 pageItem.onLoading = false
             }
         }.asyGetText {
@@ -152,12 +163,12 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             Log.d(tag, "共有列表项：${comicPage.comics.size}")
             action(comicPage)
             pageItem.maxp = comicPage.pageNum
-            runOnUiThread {
-                comicePageAdaprt.notifyDataSetChanged()
-            }
         }
     }
 
+    /**
+     * 跳页动作
+     */
     private fun onJumpPageActionDone(pagePickerDialog: PagePickerDialog, p: Int): Boolean {
         Log.d(tag, "jump: $p")
         return when {
@@ -176,6 +187,10 @@ class ComicListActivity : DownloadTaskManagerActivity() {
                     comics.addAll(it.comics)
                     pageItem.headp = p
                     pageItem.tailp = p
+                    runOnUiThread {
+                        comicePageAdaprt.notifyDataSetChanged()
+                        recyclerView.scrollToPosition(0)
+                    }
                 }
                 false
             }
@@ -184,6 +199,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun onJumpPage() {
+        pagePickerDialog.maxp = pageItem.maxp
         pagePickerDialog.show()
     }
 
