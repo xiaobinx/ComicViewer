@@ -31,7 +31,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     private val tag = javaClass.name
 
-    val comics = ArrayList<Comic>(100)
+    private val comics = ArrayList<Comic>(100)
 
     override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
 
@@ -41,7 +41,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     private lateinit var comicPageParser: IComicPageParser
 
-    private val pageItem = PageItem()
+    private val pageItem = PageItem(100)
 
     private lateinit var pagePickerDialog: PagePickerDialog
 
@@ -67,9 +67,8 @@ class ComicListActivity : DownloadTaskManagerActivity() {
             itemAnimator = DefaultItemAnimator()
 
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                var lastVisibleItem: Int = 0
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE && lastVisibleItem + 1 == comicePageAdaprt.itemCount) {
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE && pageItem.lastVisibleItem + 1 == comicePageAdaprt.itemCount) {
                         loadNextTailp()
                     }
                 }
@@ -77,7 +76,8 @@ class ComicListActivity : DownloadTaskManagerActivity() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     val layoutManager = recyclerView.layoutManager as LinearLayoutManager
                     //最后一个可见的ITEM
-                    lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                    pageItem.firstVisibleItem = layoutManager.findFirstVisibleItemPosition()
+                    pageItem.lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                 }
             })// end addOnScrollListener
         } // end recyclerView setting
@@ -203,6 +203,7 @@ class ComicListActivity : DownloadTaskManagerActivity() {
     @SuppressLint("SetTextI18n")
     private fun onJumpPage() {
         pagePickerDialog.maxp = pageItem.maxp
+        pagePickerDialog.page = pageItem.page
         pagePickerDialog.show()
     }
 

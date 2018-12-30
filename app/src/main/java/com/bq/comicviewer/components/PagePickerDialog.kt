@@ -16,6 +16,7 @@ import kotlin.concurrent.thread
 class PagePickerDialog(context: Context, val action: (PagePickerDialog, Int) -> Boolean) : Dialog(context) {
 
     var maxp: Int = -1
+    var page: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +43,7 @@ class PagePickerDialog(context: Context, val action: (PagePickerDialog, Int) -> 
         super.show()
         textView.text = "/$maxp"
         editText.apply {
-            text = null
+            setText(page.toString())
             requestFocus()
             val imm = (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
             thread {
