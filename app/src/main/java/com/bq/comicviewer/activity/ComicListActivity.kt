@@ -154,13 +154,11 @@ class ComicListActivity : DownloadTaskManagerActivity() {
         if (pageItem.onLoading) return
         pageItem.onLoading = true
         val pageUrl = partternUrl.replace("@{page}", p.toString())
-        HttpExecutor(pageUrl).doFinally {
-            runOnUiThread {
-                if (swipeRefreshLayout.isRefreshing) {
-                    swipeRefreshLayout.isRefreshing = false
-                }
-                pageItem.onLoading = false
+        HttpExecutor(pageUrl).onFinallyInUiThread {
+            if (swipeRefreshLayout.isRefreshing) {
+                swipeRefreshLayout.isRefreshing = false
             }
+            pageItem.onLoading = false
         }.asyGetText {
             val comicPage = comicPageParser.parseComicPage(it)
             Log.d(tag, "共有列表项：${comicPage.comics.size}")

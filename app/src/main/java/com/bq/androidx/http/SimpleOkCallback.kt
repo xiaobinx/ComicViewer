@@ -6,71 +6,62 @@ import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
 
-//class SimpleOkCallback(val succ: (Call, Response) -> Unit) : Callback {
 //
-//    private val tag = javaClass.name
+//interface OnSuccess {
+//    fun success(call: Call, response: Response)
+//}
 //
-//    override fun onFailure(call: Call, e: IOException) {
-//        Log.e(tag, "请求发生错误: ${e.message}，url->${call.request().url()}", e)
-//    }
+//interface onError {
+//    fun error(call: Call, e: Exception)
+//}
 //
-//    override fun onResponse(call: Call, response: Response) {
-//        val code = response.code()
-//        if (200 == code || 206 == code) {
-//            succ(call, response)
-//        } else {
-//            Log.e(tag, "请求发生错误,状态码: ${response.code()}，url->${call.request().url()}")
-//        }
-//    }
-//
+//interface onError {
+//    fun error(call: Call, e: Exception)
 //}
 
-
 class SimpleCallback(
-        val onSuccess: (CallbackContext) -> Any,
-        val onError: (CallbackContext) -> Any,
-        val doFinally: (Any) -> Unit
+    val onSuccess: (Call, Response) -> Unit,
+    val onError: (Call, Exception) -> Unit,
+    val doFinally: () -> Unit
 
 ) : Callback {
 
     override fun onFailure(call: Call, e: IOException) {
-        val r: Any = try {
-            onError(CallbackContext(call, null, e))
+        try {
+            onError(call, e)
         } catch (e1: Throwable) {
             Log.e("com.bq.androidx.http", "onError方法执行发生错误: ${e1.message}\nurl->${call.request().url()}", e1)
-            e1
         }
         try {
-            doFinally(r)
+            doFinally()
         } catch (e2: Throwable) {
             Log.e("com.bq.androidx.http", "doFinally方法执行发生错误: ${e2.message}\nurl->${call.request().url()}", e2)
         }
     }
 
     override fun onResponse(call: Call, response: Response) {
-        val cc = CallbackContext(call, response, null)
         val code = response.code()
-        val a: Any = if (200 == code || 206 == code) {
+        if (200 == code || 206 == code) {
             try {
-                onSuccess(cc)
+                onSuccess(call, response)
             } catch (e: Throwable) {
                 Log.e("com.bq.androidx.http", "onSuccess方法执行发生错误: ${e.message}\nurl->${call.request().url()}", e)
-                e
             }
         } else {
             try {
-                onError(cc)
+                onError(call, HttpCodeException(code, "HTTP请求发生错误返回状态码: $code"))
             } catch (e: Throwable) {
                 Log.e("com.bq.androidx.http", "onError方法执行发生错误: ${e.message}\nurl->${call.request().url()}", e)
-                e
             }
         }
         try {
-            doFinally(a)
+            doFinally()
         } catch (e: Throwable) {
             Log.e("com.bq.androidx.http", "doFinally方法执行发生错误: ${e.message}\nurl->${call.request().url()}", e)
         }
     }
 }
+
+class HttpCodeException(var code: Int, message: String) : Exception(message)
 
 class CallbackContext(val call: Call? = null, val response: Response? = null, val e: Throwable? = null)
