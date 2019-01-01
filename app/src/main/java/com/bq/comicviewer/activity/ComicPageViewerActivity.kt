@@ -3,7 +3,6 @@ package com.bq.comicviewer.activity
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.view.Window
 import android.widget.SeekBar
 import androidx.viewpager.widget.ViewPager
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
@@ -37,7 +36,8 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        // requestWindowFeature(Window.FEATURE_NO_TITLE)
+        supportActionBar?.hide()
         setContentView(R.layout.activity_comic_page_viewer)
 
         comic = intent.extras["comic"] as Comic
