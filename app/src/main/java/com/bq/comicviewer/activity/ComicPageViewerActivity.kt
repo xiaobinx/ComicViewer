@@ -27,21 +27,19 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     var imgs = ArrayList<String>()
 
-    val comicSqlHelper by lazy { ComicSqlHelper(this) }
+    private val comicSqlHelper by lazy { ComicSqlHelper(this) }
 
     override val imgBitmapListLoader = SimpleBitmapListLoader(useMeCache = false)
 
-    lateinit var pvAdapter: ComicPageViewerAdapter
+    private val pvAdapter: ComicPageViewerAdapter = ComicPageViewerAdapter(this)
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // requestWindowFeature(Window.FEATURE_NO_TITLE)
         supportActionBar?.hide()
         setContentView(R.layout.activity_comic_page_viewer)
 
         comic = intent.extras["comic"] as Comic
-        pvAdapter = ComicPageViewerAdapter(this)
 
         viewPager.apply {
             adapter = pvAdapter
@@ -121,5 +119,19 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     fun toggleToolBar() {
         llToolBar.toggleVisibility()
+    }
+
+    fun nextPage() {
+        val currentItem = viewPager.currentItem
+        if (currentItem < imgs.size - 1) {
+            viewPager.currentItem = currentItem + 1
+        }
+    }
+
+    fun prePage() {
+        val currentItem = viewPager.currentItem
+        if (currentItem > 0) {
+            viewPager.currentItem = currentItem - 1
+        }
     }
 }

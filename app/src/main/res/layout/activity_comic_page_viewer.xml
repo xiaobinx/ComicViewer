@@ -17,7 +17,9 @@
                   android:layout_marginEnd="10dp"
                   android:paddingStart="5dp"
                   android:paddingEnd="10dp"
-                  android:background="#FFF">
+                  android:background="#FFF"
+                  android:clickable="true"
+                  android:focusable="true">
         <SeekBar android:id="@+id/sb"
                  android:layout_weight="1"
                  android:layout_width="0dp"
