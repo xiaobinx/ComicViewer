@@ -64,22 +64,20 @@ class ComicPageViewerAdapter(
 
     private fun loadBm(imgUrl: String, iv: ImageView, progressBar: ProgressBar) {
         bitmapListLoader.load(imgUrl) {
-            activity.runOnUiThread {
-                if (iv.tag == imgUrl) {
-                    progressBar.visibility = View.GONE
-                    iv.setImageBitmap(it)
-                }
+            if (iv.tag == imgUrl) {
+                progressBar.visibility = View.GONE
+                iv.setImageBitmap(it)
             }
         }
     }
 
     class ViewHolder(val view: View) {
-        val imageView = view.photoView!! as ImageView
+        val imageView = view.photoView!!
         private val progressBar = view.progressBar!!
 
-        operator fun component1(): View = view
-        operator fun component2(): ImageView = imageView
-        operator fun component3(): ProgressBar = progressBar
+        operator fun component1() = view
+        operator fun component2() = imageView
+        operator fun component3() = progressBar
     }
 
 }

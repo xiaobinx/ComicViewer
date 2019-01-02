@@ -3,6 +3,7 @@ package com.bq.androidx.http.imglistloader
 import android.graphics.Bitmap
 import android.util.Log
 import com.bq.androidx.http.HttpExecutor
+import com.bq.androidx.tool.MainHandler
 import com.bq.androidx.tool.bimapCache
 import com.bq.androidx.tool.bitmap.decodeStream
 import com.bq.androidx.tool.commonExecutor
@@ -92,7 +93,7 @@ class BitmapCacheLoader(
             bimapCache.get(bmkey)?.let {
                 try {
                     status = DONE
-                    action(it)
+                    MainHandler.runOnUiThread { action(it) }
                 } catch (e: Throwable) {
                     Log.e(tag, "执行action发生错误: $it, url: $url, ${e.message}", e)
                 } // end try catch
@@ -108,7 +109,7 @@ class BitmapCacheLoader(
                         val bm = decodeStream(it.inputStream.readBytesThenClose(), pixelW, pixelH)
                         if (useMeCache) bimapCache.put(bmkey, bm)
                         status = DONE
-                        action(bm)
+                        MainHandler.runOnUiThread { action(bm) }
                     } catch (e: Throwable) {
                         status = ERROR
                         Log.e(tag, "加载Bitmap snapshot: $it, url: $url, ${e.message}", e)
@@ -133,7 +134,7 @@ class BitmapCacheLoader(
                     val bm = decodeStream(bytes, pixelW, pixelH)
                     if (useMeCache) bimapCache.put(bmkey, bm)
                     status = DONE
-                    action(bm)
+                    MainHandler.runOnUiThread { action(bm) }
                 }// end else
             } catch (e: Throwable) {
                 status = ERROR
@@ -155,6 +156,10 @@ class SimpleBitmapListLoader(
 ) {
     private val container = HashMap<String, SoftReference<BitmapCacheLoader>>()
 
+    /**
+     * @param url
+     * @param action 将在主线程中执行
+     */
     @Synchronized
     fun load(url: String, action: (Bitmap) -> Unit) {
         var loader = container[url]?.get()
