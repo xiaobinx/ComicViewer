@@ -41,7 +41,7 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
         setContentView(R.layout.activity_comic_page_viewer)
 
         comic = intent.extras["comic"] as Comic
-        pvAdapter = ComicPageViewerAdapter(imgBitmapListLoader, this)
+        pvAdapter = ComicPageViewerAdapter(this)
 
         viewPager.apply {
             adapter = pvAdapter

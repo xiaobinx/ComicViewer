@@ -16,22 +16,29 @@ import java.lang.ref.SoftReference
 import java.util.*
 import java.util.concurrent.Future
 
-/**
- * 正在准备
- */
-const val PREPARING = 2
-/**
- * 正在加载
- */
-const val LOADING = 1
-/**
- * 加载完成
- */
-const val DONE = 0
-/**
- * 加载发生错误
- */
-const val ERROR = -1
+enum class Status {
+
+    /**
+     * 正在准备
+     */
+    PREPARING,
+    /**
+     * 正在加载
+     */
+    LOADING,
+    /**
+     * 加载完成
+     */
+    DONE,
+    /**
+     * 加载发生错误
+     */
+    ERROR,
+    /**
+     * 下载被取消
+     */
+    CANCELED
+}
 
 /**
  * 异步下载文件并可设置使用内存及硬盘两种缓存，分别使用imgListDowloadExecutor, imgLoadExecutor下载和加载的图片，用于下载长列表中的图片
@@ -44,7 +51,7 @@ const val ERROR = -1
  */
 @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
 class BitmapCacheLoader(
-    val url: String,
+    private val url: String,
     private val pixelW: Int = 0,
     private val pixelH: Int = 0,
     private val useMeCache: Boolean = true,
@@ -59,25 +66,17 @@ class BitmapCacheLoader(
 
     private val bmkey by lazy { "$pixelW-$pixelW-$urlMd5" }
 
-    var future: Future<*>? = null
-        private set
+    private var future: Future<*>? = null
 
-    var status = PREPARING
+    var status = Status.PREPARING
         private set
 
     var action: ((Bitmap) -> Unit) = action
         @Synchronized get
         @Synchronized set(value) {
             field = value
-            when (status) {
-                DONE, ERROR -> load()
-                LOADING -> {
-                    if (null == future || future?.isCancelled == true) {
-                        load()
-                    }
-                }
-            }
-        }
+            if (status == Status.DONE || status == Status.ERROR || status == Status.CANCELED) load()
+        } // end set
 
     init {
         if (!(useMeCache || useDiskCache)) {
@@ -86,17 +85,26 @@ class BitmapCacheLoader(
         load()
     }
 
+    /**
+     * 若下载任务还没开始就取消
+     */
+    fun cancel() {
+        future?.cancel(false)
+        status = Status.CANCELED
+    }
+
+    /**
+     * 下载任务是否被取消
+     */
+    val isCancelled: Boolean get() = future?.isCancelled ?: false
+
     fun load() {
-        status = LOADING
+        status = Status.LOADING
         // 1.内存缓存中取
         if (useMeCache) {
             bimapCache.get(bmkey)?.let {
-                try {
-                    status = DONE
-                    MainHandler.runOnUiThread { action(it) }
-                } catch (e: Throwable) {
-                    Log.e(tag, "执行action发生错误: $it, url: $url, ${e.message}", e)
-                } // end try catch
+                status = Status.DONE
+                MainHandler.runOnUiThread { action(it) }
                 return
             }
         }
@@ -108,10 +116,10 @@ class BitmapCacheLoader(
                     try {
                         val bm = decodeStream(it.inputStream.readBytesThenClose(), pixelW, pixelH)
                         if (useMeCache) bimapCache.put(bmkey, bm)
-                        status = DONE
+                        status = Status.DONE
                         MainHandler.runOnUiThread { action(bm) }
                     } catch (e: Throwable) {
-                        status = ERROR
+                        status = Status.ERROR
                         Log.e(tag, "加载Bitmap snapshot: $it, url: $url, ${e.message}", e)
                     } // end try catch
                 } // end commonExecutor.submit
@@ -133,11 +141,11 @@ class BitmapCacheLoader(
                 } else {
                     val bm = decodeStream(bytes, pixelW, pixelH)
                     if (useMeCache) bimapCache.put(bmkey, bm)
-                    status = DONE
+                    status = Status.DONE
                     MainHandler.runOnUiThread { action(bm) }
                 }// end else
             } catch (e: Throwable) {
-                status = ERROR
+                status = Status.ERROR
                 Log.e(tag, "加载Bitmap发生错误url: $url, ${e.message}", e)
             } // end try catch
         }// end download runnable executorService.submit
@@ -171,8 +179,6 @@ class SimpleBitmapListLoader(
         }
     }
 
-    val tag = javaClass.name
-
     /**
      * 取消所有未完成的任务，并添加到列表list中
      */
@@ -180,13 +186,18 @@ class SimpleBitmapListLoader(
     fun cancelTaskAndAddUndoneTo(list: LinkedList<BitmapCacheLoader>) {
         container.entries.forEach {
             val loader = it.value.get()
-            val future = loader?.future
-            if (null != loader && null != future && !future.isDone) {
-                future.cancel(false)
-                if (future.isCancelled) {
+            if (null != loader && !loader.isCancelled) {
+                loader.cancel()
+                if (loader.isCancelled) {
                     list.add(loader)
                 }
             } // end ifElse
         }// end entries.forEach
     }// end cancelTaskAndAddUndoneTo
+
+    @Synchronized
+    fun cancel(coverUrl: String) {
+        container[coverUrl]?.get()?.cancel()
+        container.remove(coverUrl)
+    }
 }

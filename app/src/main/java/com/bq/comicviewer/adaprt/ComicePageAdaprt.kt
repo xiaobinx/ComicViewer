@@ -14,7 +14,7 @@ import java.util.*
 
 class ComicePageAdaprt(
     private val comics: ArrayList<Comic>,
-    val bitmapListLoader: SimpleBitmapListLoader,
+    private val bitmapListLoader: SimpleBitmapListLoader,
     private val activity: Activity
 ) :
     RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {
@@ -43,13 +43,15 @@ class ComicePageAdaprt(
         holder.textView.text = comic.title
         iv.tag = comic
         bitmapListLoader.load(comic.coverUrl) {
-            activity.runOnUiThread {
-                if (iv.tag === comic) {
-                    iv.setImageBitmap(it)
-                }
-            } // end activity.runOnUiThread
-        }// end addLoadTask
-    } // end fun onBindViewHolder
+            if (iv.tag === comic) iv.setImageBitmap(it)
+        }
+    }
+
+    override fun onViewDetachedFromWindow(holder: RvHolder) {
+        (holder.imageView.tag as? Comic)?.let {
+            bitmapListLoader.cancel(it.coverUrl)
+        }
+    }
 
     class RvHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView = view.imageView!!

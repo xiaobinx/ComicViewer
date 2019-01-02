@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.viewpager.widget.PagerAdapter
-import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.ComicPageViewerActivity
 import kotlinx.android.synthetic.main.vpitem_comic_page.view.*
@@ -15,11 +14,11 @@ import java.util.*
  * 仅在ComicPageViewerActivity中使用
  */
 class ComicPageViewerAdapter(
-    private val bitmapListLoader: SimpleBitmapListLoader,
     private val activity: ComicPageViewerActivity
 ) : PagerAdapter() {
 
     // private val tag = javaClass.name
+    private val bitmapListLoader = activity.imgBitmapListLoader
 
     private val imgs = activity.imgs
 
@@ -48,6 +47,9 @@ class ComicPageViewerAdapter(
         val holder = o as ViewHolder
         holder.imageView.apply {
             setImageBitmap(null)
+            (tag as? String)?.let {
+                bitmapListLoader.cancel(it)
+            }
             tag = null
         }
         container.removeView(holder.view)

@@ -25,7 +25,7 @@ abstract class DownloadTaskManagerActivity : AppCompatActivity() {
         val it = canceledTasks.iterator()
         while (it.hasNext()) {
             val task = it.next()
-            if (task.future?.isCancelled == true) {
+            if (task.isCancelled) {
                 task.load()
             }
         }

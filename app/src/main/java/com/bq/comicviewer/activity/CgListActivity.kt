@@ -9,7 +9,7 @@ import com.bq.androidx.http.HttpExecutor
 import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_CG_LIST
-import com.bq.comicviewer.adaprt.CgPageAdaprt
+import com.bq.comicviewer.adaprt.ComicePageAdaprt
 import com.bq.mmcg.domain.Comic
 import com.bq.mmcg.parser.CgParser
 import kotlinx.android.synthetic.main.activity_item_rlist_comic.*
@@ -22,11 +22,11 @@ class CgListActivity : DownloadTaskManagerActivity() {
 
     private val tag = javaClass.toString()
 
-    val comics = ArrayList<Comic>(100)
+    private val comics = ArrayList<Comic>(25)
 
     override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
 
-    private val comicePageAdaprt = CgPageAdaprt(imgBitmapListLoader,this)
+    private val comicePageAdaprt = ComicePageAdaprt(comics, imgBitmapListLoader, this)
 
     private var cgParser = CgParser()
 
