@@ -1,9 +1,7 @@
 package com.bq.comicviewer.adaprt
 
 import android.annotation.SuppressLint
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -75,44 +73,8 @@ class ComicPageViewerAdapter(
         }
     }
 
-
-    /**
-     * 翻页相关逻辑
-     */
     private val lt: Int by lazy { activity.screenWidth / 3 }// 三等分屏幕
     private val gt: Int by lazy { activity.screenWidth * 2 / 3 } // 三等分屏幕
-    private val mTouchSlop by lazy { ViewConfiguration.get(activity).scaledTouchSlop }
-    private val onImgTouchListener: View.OnTouchListener by lazy {
-        object : View.OnTouchListener {
-            var clickX = 0f
-            var clickY = 0f
-            @SuppressLint("ClickableViewAccessibility")
-            override fun onTouch(v: View?, ev: MotionEvent): Boolean {
-                when (ev.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        clickX = ev.x
-                        clickY = ev.y
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        val xDiff = Math.abs(ev.x - clickX)
-                        val yDiff = Math.abs(ev.y - clickY)
-                        if (xDiff < mTouchSlop && xDiff >= yDiff) click(ev.x)
-                    }
-                }
-                return true
-            }
-
-            private fun click(x: Float) {
-                if (x < lt) {
-                    activity.prePage()
-                } else if (x >= lt && x <= gt) {
-                    activity.toggleToolBar()
-                } else if (x > gt) {
-                    activity.nextPage()
-                }
-            }
-        }
-    }
 
     @SuppressLint("ClickableViewAccessibility")
     inner class ViewHolder(val view: View) {
@@ -121,7 +83,22 @@ class ComicPageViewerAdapter(
         private val progressBar = view.progressBar!!
 
         init {
-            imageView.setOnTouchListener(onImgTouchListener)
+            imageView.setOnViewTapListener { _, x, _ ->
+                click(x)
+            }
+        }
+
+        /**
+         * 翻页相关逻辑
+         */
+        private fun click(x: Float) {
+            if (x < lt) {
+                activity.prePage()
+            } else if (x >= lt && x <= gt) {
+                activity.toggleToolBar()
+            } else if (x > gt) {
+                activity.nextPage()
+            }
         }
 
         operator fun component1() = view
