@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
 import com.bq.androidx.http.HttpExecutor
 import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
+import com.bq.androidx.toast
 import com.bq.comicviewer.R
 import com.bq.comicviewer.URL_PATTERN_COMIC_LIST
 import com.bq.comicviewer.URL_PATTERN_DOUJIN_LIST
@@ -200,14 +201,18 @@ class ComicListActivity : DownloadTaskManagerActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun onJumpPage() {
-        pagePickerDialog.maxp = pageItem.maxp
-        pagePickerDialog.page = pageItem.page
-        pagePickerDialog.show()
+        if(pageItem.maxp < 1) {
+            toast("还未加载完成。")
+        }else {
+            pagePickerDialog.maxp = pageItem.maxp
+            pagePickerDialog.page = pageItem.page
+            pagePickerDialog.show()
+        }
     }
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        MenuInflater(this).inflate(R.menu.menu, menu)
+        MenuInflater(this).inflate(R.menu.menu_comic_list, menu)
         return super.onCreateOptionsMenu(menu)
     }
 

@@ -2,15 +2,18 @@ package com.bq.comicviewer.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.bq.comicviewer.R
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main2.*
 
-class MainActivity : AppCompatActivity() {
+class Main2Activity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main2)
 
         cardCg.setOnClickListener {
             val intent = Intent(this, CgListActivity::class.java)
@@ -23,11 +26,6 @@ class MainActivity : AppCompatActivity() {
         cardDoujin.setOnClickListener {
             openPage(R.string.str_main_title_doujin)
         }
-        cardHistory.setOnClickListener {
-            val intent = Intent(this, ComicHistoryActivity::class.java)
-            startActivity(intent)
-        }
-
     }
 
     private fun openPage(strId: Int) {
@@ -36,4 +34,17 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        MenuInflater(this).inflate(R.menu.menu_mian2, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (R.id.history == item.itemId) {
+            val intent = Intent(this, ComicHistoryActivity::class.java)
+            startActivity(intent)
+        }
+        return super.onOptionsItemSelected(item)
+    }
 }
