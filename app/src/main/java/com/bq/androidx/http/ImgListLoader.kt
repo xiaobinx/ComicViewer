@@ -1,10 +1,8 @@
-package com.bq.androidx.http.imglistloader
+package com.bq.androidx.http
 
 import android.graphics.Bitmap
 import android.util.Log
-import com.bq.androidx.http.HttpExecutor
 import com.bq.androidx.tool.MainHandler
-import com.bq.androidx.tool.bimapCache
 import com.bq.androidx.tool.bitmap.decodeStream
 import com.bq.androidx.tool.commonExecutor
 import com.bq.androidx.tool.executorService
@@ -26,6 +24,10 @@ enum class Status {
      * 正在加载
      */
     LOADING,
+    /**
+     * 正在下载
+     */
+    DOWN_LOADING,
     /**
      * 加载完成
      */
@@ -50,7 +52,7 @@ enum class Status {
  * @return 返回正在执行或将要执行任务的Future
  */
 @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
-class BitmapCacheLoader(
+class Task(
     private val url: String,
     private val pixelW: Int = 0,
     private val pixelH: Int = 0,
@@ -82,15 +84,15 @@ class BitmapCacheLoader(
         if (!(useMeCache || useDiskCache)) {
             throw Exception("必须有中一个缓存选项为true，否则不应该用这个类加载图片")
         }
-        load()
     }
 
     /**
      * 若下载任务还没开始就取消
      */
     fun cancel() {
-        future?.cancel(false)
-        status = Status.CANCELED
+        if (future?.cancel(false) == true) {
+            status = Status.CANCELED
+        }
     }
 
     /**
@@ -102,7 +104,7 @@ class BitmapCacheLoader(
         status = Status.LOADING
         // 1.内存缓存中取
         if (useMeCache) {
-            bimapCache.get(bmkey)?.let {
+            App.bimapCache.get(bmkey)?.let {
                 status = Status.DONE
                 MainHandler.runOnUiThread { action(it) }
                 return
@@ -115,7 +117,7 @@ class BitmapCacheLoader(
                 commonExecutor.submit {
                     try {
                         val bm = decodeStream(it.inputStream.readBytesThenClose(), pixelW, pixelH)
-                        if (useMeCache) bimapCache.put(bmkey, bm)
+                        if (useMeCache) App.bimapCache.put(bmkey, bm)
                         status = Status.DONE
                         MainHandler.runOnUiThread { action(bm) }
                     } catch (e: Throwable) {
@@ -128,8 +130,23 @@ class BitmapCacheLoader(
         } // end if (readDiskCache)
 
         // 3. 下载
+        download()
+    }// end fun load
+
+    fun prepareDownload() {
+        status = Status.LOADING
+        if (!useDiskCache) throw RuntimeException("必须启用硬盘缓存")
+        if (isCached()) return // 硬盘缓存已经完成下载
+
+        download()
+    }
+
+    fun isCached() = App.diskCache.contains(urlMd5)
+
+    private fun download() {
         future = executorService.submit {
             try {
+                status = Status.DOWN_LOADING
                 val bytes = executor.get()?.body()?.byteStream()?.let {
                     val bytes = it.readBytesThenClose()
                     if (bytes.size < 0) throw Exception("获取请求体发生错误")
@@ -140,64 +157,111 @@ class BitmapCacheLoader(
                     throw Exception("获取请求体发生错误")
                 } else {
                     val bm = decodeStream(bytes, pixelW, pixelH)
-                    if (useMeCache) bimapCache.put(bmkey, bm)
+                    if (useMeCache) App.bimapCache.put(bmkey, bm)
                     status = Status.DONE
                     MainHandler.runOnUiThread { action(bm) }
                 }// end else
             } catch (e: Throwable) {
                 status = Status.ERROR
                 Log.e(tag, "加载Bitmap发生错误url: $url, ${e.message}", e)
-            } // end try catch
-        }// end download runnable executorService.submit
-    }// end fun load
+            }
+        }
+    }
 
 }
 
 /**
  * 管理一类图片列表的下载
  */
-class SimpleBitmapListLoader(
+class BitmapListLoader(
     private val pixelW: Int = 0,
     private val pixelH: Int = 0,
     private val useMeCache: Boolean = true,
     private val useDiskCache: Boolean = true
 ) {
-    private val container = HashMap<String, SoftReference<BitmapCacheLoader>>()
+
+    private val container = HashMap<String, SoftReference<Task>>()
+
+    private var canceledTasks = LinkedList<Task>()
+
 
     /**
-     * @param url
-     * @param action 将在主线程中执行
+     * 加载图片
      */
     @Synchronized
     fun load(url: String, action: (Bitmap) -> Unit) {
-        var loader = container[url]?.get()
-        if (null == loader) {
-            loader = BitmapCacheLoader(url, pixelW, pixelH, useMeCache, useDiskCache, action)
-            container[url] = SoftReference(loader)
+        var task = container[url]?.get()
+        if (null == task) {
+            task = Task(url, pixelW, pixelH, useMeCache, useDiskCache, action)
+            container[url] = SoftReference(task)
+            task.load()
         } else {
-            loader.action = action
+            task.action = action
+        }
+    }
+
+
+    /**
+     * 预加载图片
+     */
+    @Synchronized
+    fun load(url: String) {
+        var task = container[url]?.get()
+        if (null == task) {
+            task = Task(url, pixelW, pixelH, useMeCache, useDiskCache) {}
+            container[url] = SoftReference(task)
+            task.prepareDownload()
         }
     }
 
     /**
-     * 取消所有未完成的任务，并添加到列表list中
+     * 暂停下载,取消所有未完成的任务，并添加到列表list中
      */
-    @Synchronized
-    fun cancelTaskAndAddUndoneTo(list: LinkedList<BitmapCacheLoader>) {
+    fun onPause() {
         container.entries.forEach {
             val loader = it.value.get()
             if (null != loader && !loader.isCancelled) {
                 loader.cancel()
                 if (loader.isCancelled) {
-                    list.add(loader)
+                    canceledTasks.add(loader)
                 }
             } // end ifElse
         }// end entries.forEach
-    }// end cancelTaskAndAddUndoneTo
+    }
+
+    /**
+     * 清空所有下载任务
+     */
+    fun finish() {
+        container.values.forEach {
+            it.get()?.let { task ->
+                task.cancel()
+            }
+        }
+    }
+
+    /**
+     * 重新执行被取消的任务
+     */
+    fun onResume() {
+        if (canceledTasks.size < 1) return
+        val it = canceledTasks.iterator()
+        while (it.hasNext()) {
+            val task = it.next()
+            if (task.isCancelled) {
+                task.load()
+            }
+        }
+        canceledTasks.clear()
+    }
 
     @Synchronized
     fun cancel(coverUrl: String) {
         container[coverUrl]?.get()?.cancel()
-        container.remove(coverUrl)
+    }
+
+    fun isDoing(url: String): Boolean {
+        val task = container[url]?.get()
+        return task?.status == Status.DOWN_LOADING || task?.isCached() ?: false
     }
 }

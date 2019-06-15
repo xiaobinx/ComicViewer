@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
-import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
+import com.bq.androidx.http.BitmapListLoader
 import com.bq.androidx.tool.commonExecutor
 import com.bq.comicviewer.R
 import com.bq.comicviewer.adaprt.ComicePageAdaprt
@@ -21,9 +21,9 @@ class ComicHistoryActivity : DownloadTaskManagerActivity() {
 
     private val comics = ArrayList<Comic>()
 
-    override val imgBitmapListLoader = SimpleBitmapListLoader(90, 120)
+    override val bitmapListLoader = BitmapListLoader(90, 120)
 
-    private val comicePageAdaprt = ComicePageAdaprt(comics, imgBitmapListLoader, this)
+    private val comicePageAdaprt = ComicePageAdaprt(comics, bitmapListLoader, this)
 
     private val pageItem = PageItem()
 

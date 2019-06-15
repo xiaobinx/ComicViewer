@@ -2,6 +2,7 @@ package com.bq.comicviewer
 
 import android.app.Application
 import android.preference.PreferenceManager
+import com.bq.androidx.tool.BimapCache
 import com.bq.androidx.tool.commonExecutor
 import com.bq.androidx.tool.executorService
 import com.bq.kotlinx.cache.DiskCache
@@ -27,6 +28,11 @@ class App : Application() {
         var diskCacheVersion = 1
         var diskCacheMaxSize = 1024 * 1024 * 200L // byte
         lateinit var diskCache: DiskCache
+
+        /**
+         * bitmap内存缓存
+         */
+        val bimapCache by lazy { BimapCache() }
     }
 
     override fun onCreate() {

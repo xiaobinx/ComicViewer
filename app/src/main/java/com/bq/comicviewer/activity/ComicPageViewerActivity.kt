@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
-import com.bq.androidx.components.activityx.DownloadTaskManagerActivity
+import com.bq.androidx.http.BitmapListLoader
 import com.bq.androidx.http.HttpExecutor
-import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
 import com.bq.androidx.toggleVisibility
 import com.bq.comicviewer.R
 import com.bq.comicviewer.adaprt.ComicPageViewerAdapter
@@ -17,7 +17,7 @@ import com.bq.mmcg.parser.ComicParser
 import kotlinx.android.synthetic.main.activity_comic_page_viewer.*
 import java.util.*
 
-class ComicPageViewerActivity : DownloadTaskManagerActivity() {
+class ComicPageViewerActivity : AppCompatActivity() {
 
     private val tag = javaClass.toString()
 
@@ -29,7 +29,7 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
     private val comicSqlHelper by lazy { ComicSqlHelper(this) }
 
-    override val imgBitmapListLoader = SimpleBitmapListLoader(useMeCache = false)
+    val bitmapListLoader = BitmapListLoader(useMeCache = false)
 
     private val pvAdapter: ComicPageViewerAdapter = ComicPageViewerAdapter(this)
 
@@ -46,14 +46,17 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageScrollStateChanged(state: Int) {
-                    if (sb.progress != currentItem) {
-                        updateImgProgress()
-                        setText()
+                    if (ViewPager.SCROLL_STATE_SETTLING == state) {
+                        if (sb.progress != currentItem) {
+                            updateImgProgress()
+                            setText()
+                        }
                     }
                 }
 
                 override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
                 override fun onPageSelected(position: Int) {}
+
             })
         }
         sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -85,9 +88,19 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
                 Log.d(tag, "count: ${list.size}, url: ${comic.url}")
                 comic.imgs = list
                 comicSqlHelper.saveComic(comic)
+                // prepareDownload(comic)
                 initUi()
             }// end HttpExecutor asyGetText
         } // end comic.id > 0 else
+    }
+
+    /**
+     * 从历史纪录开始预下载任务
+     */
+    private fun prepareDownload(comic: Comic) {
+        for (i in comic.i until comic.imgs.size) {
+            bitmapListLoader.load(comic.imgs[i])
+        }
     }
 
     private fun initUi() {
@@ -112,6 +125,7 @@ class ComicPageViewerActivity : DownloadTaskManagerActivity() {
             // 更新观看历史记录
             comicSqlHelper.updateHistory(comic.id, viewPager.currentItem)
             comicSqlHelper.close()
+            bitmapListLoader.finish()
         } finally {
             super.finish()
         }

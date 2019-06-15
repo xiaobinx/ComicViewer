@@ -4,17 +4,6 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 
-inline fun <T> SQLiteDatabase.transaction(action: SQLiteDatabase.() -> T): T {
-    try {
-        beginTransaction()
-        val t = action(this)
-        setTransactionSuccessful()
-        return t
-    } finally {
-        endTransaction()
-    }
-}
-
 inline fun Cursor.eachRow(action: Cursor.() -> Unit) {
     use {
         while (it.moveToNext()) {

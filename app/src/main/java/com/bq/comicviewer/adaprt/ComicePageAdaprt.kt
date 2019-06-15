@@ -5,7 +5,7 @@ import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
+import com.bq.androidx.http.BitmapListLoader
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.ComicPageViewerActivity
 import com.bq.mmcg.domain.Comic
@@ -14,7 +14,7 @@ import java.util.*
 
 class ComicePageAdaprt(
     private val comics: ArrayList<Comic>,
-    private val bitmapListLoader: SimpleBitmapListLoader,
+    private val bitmapListLoader: BitmapListLoader,
     private val activity: Activity
 ) :
     RecyclerView.Adapter<ComicePageAdaprt.RvHolder>(), View.OnClickListener {

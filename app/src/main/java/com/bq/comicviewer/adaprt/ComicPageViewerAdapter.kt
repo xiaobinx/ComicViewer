@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.viewpager.widget.PagerAdapter
 import com.bq.androidx.screenWidth
+import com.bq.comicviewer.App
 import com.bq.comicviewer.R
 import com.bq.comicviewer.activity.ComicPageViewerActivity
 import kotlinx.android.synthetic.main.vpitem_comic_page.view.*
@@ -20,7 +21,7 @@ class ComicPageViewerAdapter(
 ) : PagerAdapter() {
 
     // private val tag = javaClass.name
-    private val bitmapListLoader = activity.imgBitmapListLoader
+    private val bitmapListLoader = activity.bitmapListLoader
 
     private val imgs = activity.imgs
 

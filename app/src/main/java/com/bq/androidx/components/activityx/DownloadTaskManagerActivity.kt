@@ -2,34 +2,21 @@ package com.bq.androidx.components.activityx
 
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
-import com.bq.androidx.http.imglistloader.BitmapCacheLoader
-import com.bq.androidx.http.imglistloader.SimpleBitmapListLoader
+import com.bq.androidx.http.Task
+import com.bq.androidx.http.BitmapListLoader
 import java.util.*
 
 @SuppressLint("Registered")
 abstract class DownloadTaskManagerActivity : AppCompatActivity() {
 
-    abstract val imgBitmapListLoader: SimpleBitmapListLoader
-
-    /**
-     * 只在主线程中操作downloadTasks 避免线程安全问题
-     */
-    private var canceledTasks = LinkedList<BitmapCacheLoader>()
+    abstract val bitmapListLoader: BitmapListLoader
 
     /**
      * 重新执行被取消的任务
      */
     override fun onResume() {
         super.onResume()
-        if (canceledTasks.size < 1) return
-        val it = canceledTasks.iterator()
-        while (it.hasNext()) {
-            val task = it.next()
-            if (task.isCancelled) {
-                task.load()
-            }
-        }
-        canceledTasks.clear()
+        bitmapListLoader.onResume()
     }
 
     /**
@@ -37,7 +24,7 @@ abstract class DownloadTaskManagerActivity : AppCompatActivity() {
      */
     override fun onPause() {
         try {
-            imgBitmapListLoader.cancelTaskAndAddUndoneTo(canceledTasks)
+            bitmapListLoader.onPause()
         } finally {
             super.onPause()
         }
@@ -48,7 +35,7 @@ abstract class DownloadTaskManagerActivity : AppCompatActivity() {
      */
     override fun finish() {
         try {
-            canceledTasks.clear()
+            bitmapListLoader.finish()
         } finally {
             super.finish()
         }
