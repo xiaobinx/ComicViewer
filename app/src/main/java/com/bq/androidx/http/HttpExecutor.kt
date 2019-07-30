@@ -34,7 +34,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
 
     fun success(action: (String) -> Unit): HttpExecutor {
         fOnSuccess = { _, response ->
-            action(response.body()?.string() ?: throw Exception("请求成功，但请求体转成字符串的时候发生错误"))
+            action(response.body?.string() ?: throw Exception("请求成功，但请求体转成字符串的时候发生错误"))
         }
         return this
     }
@@ -68,7 +68,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
             SimpleCallback(
                 fOnSuccess ?: throw Exception("没有设置OnSeccess函数"),
                 fOnError ?: { c, e ->
-                    Log.e(tag, "请求发生错误: ${e.message}，url->${c.request().url()}", e)
+                    Log.e(tag, "请求发生错误: ${e.message}，url->${c.request().url}", e)
                 },
                 fDoFinally ?: { }
             )
@@ -83,7 +83,7 @@ class HttpExecutor(val url: String, private val client: OkHttpClient = t_client)
         val request = prepareCommonRequest()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful)
-            throw Exception("请求发生错误url->$url，状态码->${response.code()}")
+            throw Exception("请求发生错误url->$url，状态码->${response.code}")
         return response
     }
 

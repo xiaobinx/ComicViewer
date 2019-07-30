@@ -147,7 +147,7 @@ class Task(
         future = executorService.submit {
             try {
                 status = Status.DOWN_LOADING
-                val bytes = executor.get()?.body()?.byteStream()?.let {
+                val bytes = executor.get()?.body?.byteStream()?.let {
                     val bytes = it.readBytesThenClose()
                     if (bytes.size < 0) throw Exception("获取请求体发生错误")
                     if (useDiskCache) App.diskCache.put(urlMd5, bytes)
